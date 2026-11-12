@@ -60,4 +60,4 @@ Server: copy `server/.env.example` to `server/.env`, set `INTENTS_API_KEY` (a 1C
 - Intents has no testnet: the first real trade should be a few dollars.
 
 ## License
-Not yet chosen. Until one is added, all rights are reserved by the author.
+MIT. See [LICENSE](LICENSE).
