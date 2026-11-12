@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>MannyFi demo</title>
+<style>
+@font-face{font-family:'BV Serif';src:url('../server/sarf/assets/InstrumentSerif-Regular.ttf') format('truetype')}
+@font-face{font-family:'BV Sans';src:url('../server/sarf/assets/Geist.ttf') format('truetype');font-weight:100 900}
+@font-face{font-family:'BV Mono';src:url('../server/sarf/assets/GeistMono.ttf') format('truetype');font-weight:100 900}
+:root{--bg:#f4eedf;--surface:#fcf8ef;--text:#1f1b14;--muted:#6f6450;--line:#e0d6be;--accent:#b8862b;--pos:#2e7d52;--neg:#b04034}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:var(--bg)}
+body{font-family:'BV Sans',system-ui,sans-serif;color:var(--text)}
+#stage{position:relative;width:1280px;height:720px;overflow:hidden;background:var(--bg)}
+.glow{position:absolute;right:-180px;top:-240px;width:760px;height:760px;border-radius:50%;background:radial-gradient(closest-side,rgba(184,134,43,.30),transparent)}
+.glow2{position:absolute;left:-300px;bottom:-380px;width:760px;height:760px;border-radius:50%;background:radial-gradient(closest-side,rgba(184,134,43,.14),transparent)}
+.display{font-family:'BV Serif',Georgia,serif;font-weight:400;letter-spacing:-.02em;line-height:1}
+.kicker{font-family:'BV Mono',monospace;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.mark{width:40px;height:40px;border-radius:12px;background:var(--text);display:grid;place-items:center}
+.mark i{width:19px;height:19px;border-radius:50%;border:3px solid var(--surface);position:relative}
+.mark i:after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--accent)}
+.brand{display:flex;align-items:center;gap:12px;font-family:'BV Serif',serif;font-size:30px}
+#topbar{position:absolute;left:48px;top:30px;right:48px;display:flex;justify-content:space-between;align-items:center;z-index:5}
+#stepcount{font-family:'BV Mono',monospace;font-size:13px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+#progress{position:absolute;left:0;bottom:0;height:5px;width:100%;background:rgba(31,27,20,.08);z-index:6}
+#progress i{display:block;height:100%;width:0;background:var(--accent)}
+#fine{position:absolute;left:48px;bottom:16px;font-size:12px;color:var(--muted);z-index:5}
+.scene{position:absolute;inset:0;opacity:0;pointer-events:none}
+.cap{position:absolute;left:48px;top:150px;width:370px}
+.badge{width:46px;height:46px;border-radius:50%;background:var(--text);color:var(--bg);display:grid;place-items:center;font-family:'BV Serif',serif;font-size:26px;margin-bottom:22px}
+.cap h2{font-family:'BV Serif',serif;font-weight:400;font-size:60px;line-height:.98;letter-spacing:-.02em}
+.cap p{margin-top:20px;font-size:19px;line-height:1.45;color:var(--muted)}
+.view{position:absolute;left:450px;top:96px;width:790px;height:580px}
+.browser{width:790px;height:580px;border-radius:20px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(31,27,20,.45)}
+.bbar{height:42px;display:flex;align-items:center;gap:8px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+.dot{width:12px;height:12px;border-radius:50%}
+.url{margin-left:14px;flex:1;height:26px;border-radius:99px;background:var(--bg);display:flex;align-items:center;padding:0 14px;font-family:'BV Mono',monospace;font-size:12.5px;color:var(--muted)}
+.vp{position:relative;height:538px;overflow:hidden;background:var(--bg)}
+.vp img{position:absolute;left:0;top:0;width:790px;display:block}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 60px -30px rgba(31,27,20,.4)}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 24px;border-radius:12px;background:var(--text);color:var(--bg);font-size:16px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.tile{display:flex;align-items:center;gap:14px;padding:12px 20px 12px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.chip{width:48px;height:48px;border-radius:15px;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center}
+.tile b{display:block;font-size:17px}.tile small{display:block;color:var(--muted);font-size:13px}
+.field{height:48px;border:1px solid var(--line);border-radius:12px;background:var(--bg);display:flex;align-items:center;padding:0 16px;font-family:'BV Mono',monospace;font-size:15px}
+.lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;font-weight:600}
+.row{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.num{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:14px;font-weight:600;flex:0 0 30px}
+.num.done{background:var(--pos);border-color:var(--pos);color:#fff}
+.row .t{flex:1}.row .t b{display:block;font-size:17px}.row .t span{color:var(--muted);font-size:14px}
+.pill{font-size:12px;padding:6px 12px;border-radius:99px;background:rgba(46,125,82,.12);color:var(--pos);font-weight:600}
+.slider{height:6px;border-radius:3px;background:var(--line);position:relative;margin-top:10px}
+.slider i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--accent)}
+/* chat */
+.chatwin{width:790px;height:580px;border-radius:22px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:0 30px 60px -30px rgba(31,27,20,.45);display:flex;flex-direction:column}
+.chead{height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:1px solid var(--line);flex:0 0 50px}
+.chead .ex{font-family:'BV Mono',monospace;font-size:12px;letter-spacing:.16em;color:var(--muted)}
+.chead .as{font-size:13px;border:1px solid var(--line);border-radius:99px;padding:5px 14px;color:var(--muted)}
+.carea{position:relative;flex:1;overflow:hidden;background:linear-gradient(var(--surface),var(--bg))}
+.cin{position:absolute;left:0;right:0;top:0;padding:18px 22px 22px;display:flex;flex-direction:column;gap:14px}
+.msg{display:none;max-width:84%;font-size:17px;line-height:1.4}
+.msg.user{align-self:flex-end;background:var(--text);color:var(--bg);padding:12px 18px;border-radius:20px 20px 6px 20px}
+.msg.bot{align-self:flex-start}
+.msg.bot .txt{background:#efe8d4;padding:12px 18px;border-radius:20px 20px 20px 6px;margin-bottom:10px;display:inline-block}
+.msg.bot img{display:block;border-radius:14px;border:1px solid var(--line)}
+.think{display:inline-flex;gap:5px;background:#efe8d4;padding:14px 18px;border-radius:20px 20px 20px 6px}
+.think i{width:8px;height:8px;border-radius:50%;background:var(--muted);opacity:.5}
+.caret{display:inline-block;width:2px;height:1em;background:var(--bg);margin-left:2px;vertical-align:-2px}
+.bullets{margin-top:30px;display:grid;gap:18px;font-size:24px}
+.bullets li{list-style:none;display:flex;gap:16px;align-items:center}
+.bullets li:before{content:'';width:14px;height:14px;border-radius:50%;background:var(--accent);flex:0 0 14px}
+</style></head>
+<body><div id="stage">
+<div class="glow"></div><div class="glow2"></div>
+<div id="topbar"><div class="brand"><div class="mark"><i></i></div>MannyFi</div><div id="stepcount"></div></div>
+<div id="fine">Sample amounts for illustration. Not financial advice.</div>
+<div id="progress"><i></i></div>
+
+<!-- 1 title -->
+<section class="scene" id="s1">
+  <div style="position:absolute;left:96px;top:190px;width:1000px">
+    <p class="kicker">Full walkthrough</p>
+    <h1 class="display" style="font-size:112px;margin-top:22px">Invest in a theme,<br><span style="color:#8a6218">just by asking.</span></h1>
+    <p id="cp_s1" style="margin-top:30px;font-size:28px;color:var(--muted);width:860px;line-height:1.4;min-height:120px"></p>
+  </div>
+</section>
+
+<!-- 2 home -->
+<section class="scene" id="s2">
+  <aside class="cap"><div class="badge">1</div><h2>Open<br>mannyfi.xyz</h2><p class="cp" id="cp_s2"></p></aside>
+  <div class="view"><div class="browser"><div class="bbar"><i class="dot" style="background:#e08a74"></i><i class="dot" style="background:#e3b24b"></i><i class="dot" style="background:#7bb87f"></i><div class="url">mannyfi.xyz</div></div><div class="vp"><img id="im_home" src="assets/shot_home.png"></div></div></div>
+</section>
+
+<!-- 3 basket -->
+<section class="scene" id="s3">
+  <aside class="cap"><div class="badge">2</div><h2>Look inside<br>a basket</h2><p class="cp" id="cp_s3"></p></aside>
+  <div class="view"><div class="browser"><div class="bbar"><i class="dot" style="background:#e08a74"></i><i class="dot" style="background:#e3b24b"></i><i class="dot" style="background:#7bb87f"></i><div class="url">mannyfi.xyz/baskets/blue-chip</div></div><div class="vp"><img id="im_basket" src="assets/shot_basket.png"></div></div></div>
+</section>
+
+<!-- 4 guide -->
+<section class="scene" id="s4">
+  <aside class="cap"><div class="badge">3</div><h2>Get a<br>NEAR wallet</h2><p class="cp" id="cp_s4"></p></aside>
+  <div class="view"><div class="browser"><div class="bbar"><i class="dot" style="background:#e08a74"></i><i class="dot" style="background:#e3b24b"></i><i class="dot" style="background:#7bb87f"></i><div class="url">mannyfi.xyz/guide</div></div><div class="vp"><img id="im_guide" src="assets/shot_guide.png"></div></div></div>
+</section>
+
+<!-- 5 connect -->
+<section class="scene" id="s5">
+  <aside class="cap"><div class="badge">4</div><h2>Add the<br>connector</h2><p class="cp" id="cp_s5"></p></aside>
+  <div class="view">
+    <div style="display:flex;gap:16px;margin-bottom:26px" id="tiles"></div>
+    <div class="card" style="padding:30px 32px">
+      <p class="kicker">Add custom connector</p>
+      <p class="lbl">Name</p><div class="field" style="font-family:'BV Sans'">MannyFi</div>
+      <p class="lbl">Connector address</p><div class="field"><span id="urltype"></span><span class="caret" id="caret1" style="background:var(--text)"></span></div>
+      <div style="display:flex;align-items:center;gap:18px;margin-top:26px"><div class="btn" id="addbtn">Add</div><span class="pill" id="added" style="opacity:0;font-size:15px;padding:9px 16px">Connected. Now your assistant opens one page to finish.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 setup -->
+<section class="scene" id="s6">
+  <aside class="cap"><div class="badge">5</div><h2>One page,<br>one minute</h2><p class="cp" id="cp_s6"></p></aside>
+  <div class="view"><div class="card" style="padding:28px 34px;height:580px">
+    <p class="kicker">Allow access</p>
+    <p style="font-size:20px;margin-top:10px"><b>Claude</b> wants to connect to your MannyFi account.</p>
+    <div class="row"><div class="num" id="n1">1</div><div class="t"><b>Sign in with NEAR</b><span id="t1">One signature. It moves no money.</span></div><span class="pill" id="p1" style="opacity:0">Signed in as alice.near</span></div>
+    <div class="row"><div class="num" id="n2">2</div><div class="t"><b>Create a passkey</b><span id="t2">Face ID, a fingerprint or your PIN.</span></div><span class="pill" id="p2" style="opacity:0">Passkey confirmed</span></div>
+    <div class="row" style="align-items:flex-start"><div class="num" id="n3">3</div><div class="t" style="flex:1"><b>Pick your limits</b>
+      <div id="lim" style="opacity:0;margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+        <div><span>Per order</span><b id="l1" style="display:block;font-size:22px;margin-top:2px">$50</b><div class="slider"><i style="width:50%"></i></div></div>
+        <div><span>Per day</span><b id="l2" style="display:block;font-size:22px;margin-top:2px">$100</b><div class="slider"><i style="width:40%"></i></div></div>
+        <div><span>Lasts</span><b id="l3" style="display:block;font-size:22px;margin-top:2px">24 hours</b><div class="slider"><i style="width:30%"></i></div></div></div></div></div>
+    <div class="row"><div class="num" id="n4">4</div><div class="t"><b>Allow trading from chat</b><span id="t4">One wallet signature adds a short-lived trading key.</span></div><span class="pill" id="p4" style="opacity:0">Trading from chat is on</span></div>
+  </div></div>
+</section>
+
+<!-- 7 fund -->
+<section class="scene" id="s7">
+  <aside class="cap"><div class="badge">6</div><h2>Add some<br>USDC</h2><p class="cp" id="cp_s7"></p></aside>
+  <div class="view"><div class="card" style="padding:34px 38px">
+    <p class="kicker">Add funds</p>
+    <p class="display" style="font-size:46px;margin-top:12px">Put USDC in your vault.</p>
+    <div style="display:grid;grid-template-columns:1fr 150px;gap:16px;margin-top:6px"><div><p class="lbl">Send USDC from</p><div class="field" style="font-family:'BV Sans'">NEAR (from your wallet)</div></div><div><p class="lbl">Amount ($)</p><div class="field" id="amt">100</div></div></div>
+    <div class="btn" id="depbtn" style="width:100%;margin-top:26px">Deposit from my wallet</div>
+    <p class="pill" id="sent" style="opacity:0;display:inline-block;margin-top:20px;font-size:15px;padding:10px 16px">Sent $100 USDC. It shows in your balance in under a minute.</p>
+  </div></div>
+</section>
+
+<!-- 8 chat -->
+<section class="scene" id="s8">
+  <aside class="cap"><div class="badge" id="cbadge">7</div><h2 id="ch2">Ask for<br>your balance</h2><p class="cp" id="cp_s8"></p></aside>
+  <div class="view"><div class="chatwin"><div class="chead"><div style="display:flex;gap:8px"><i class="dot" style="background:#e08a74"></i><i class="dot" style="background:#e3b24b"></i><i class="dot" style="background:#7bb87f"></i></div><span class="ex">EXAMPLE CHAT</span><span class="as">your assistant</span></div>
+    <div class="carea"><div class="cin" id="cin"></div></div></div></div>
+</section>
+
+<!-- 9 outro -->
+<section class="scene" id="s9">
+  <div style="position:absolute;left:96px;top:150px;width:1080px">
+    <p class="kicker">You stay in control</p>
+    <h2 class="display" style="font-size:92px;margin-top:20px">Your keys. Your limits.<br><span style="color:#8a6218">Switch off any time.</span></h2>
+    <ul class="bullets"><li id="b1">Your wallet keys never leave your wallet</li><li id="b2">Trades run on NEAR Intents, from your own account</li><li id="b3">Anything over your limits is never run</li></ul>
+    <p class="display" id="url9" style="font-size:60px;margin-top:44px">mannyfi.xyz</p>
+  </div>
+</section>
+</div>
+
+
+<script src="timeline.js"></script>
+<script src="engine.js"></script>
+</body></html>

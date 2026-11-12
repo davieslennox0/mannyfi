@@ -1,0 +1,26 @@
+# secrets and local state: never commit
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.relayer.json
+.test-wallet.json
+*.pem
+*.key
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
+data/
+# build and tooling
+node_modules/
+.venv/
+__pycache__/
+.pytest_cache/
+.next/
+out/
+*.log
+*.png
+.DS_Store

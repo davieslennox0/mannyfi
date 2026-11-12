@@ -1,0 +1,70 @@
+# MannyFi.
+#   mannyfi.xyz      the website (static, /var/www/mannyfi) + the browser API and the OAuth issuer
+#   mcp.mannyfi.xyz  the MCP connector address for Claude / ChatGPT (and its OAuth discovery document)
+# Both reach the one Python server on 127.0.0.1:8770. Nothing else of the server is exposed.
+
+mannyfi.xyz {
+    encode gzip
+
+    @server path /api/* /healthz /authorize /.well-known/oauth-authorization-server* /.well-known/oauth-protected-resource*
+    handle @server {
+        reverse_proxy 127.0.0.1:8770 {
+            flush_interval -1
+        }
+    }
+
+    handle {
+        root * /var/www/mannyfi
+        try_files {path} {path}index.html {path}/index.html
+        file_server
+        header /_next/static/* Cache-Control "public, max-age=31536000, immutable"
+        header /*.html Cache-Control "no-cache"
+    }
+
+    handle_errors {
+        @page not path /api/* /mcp /mcp/*
+        handle @page {
+            root * /var/www/mannyfi
+            rewrite * /404.html
+            file_server
+        }
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+        X-Frame-Options DENY
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        -Server
+    }
+}
+
+www.mannyfi.xyz {
+    redir https://mannyfi.xyz{uri} permanent
+}
+
+mcp.mannyfi.xyz {
+    encode gzip
+
+    @allowed path /mcp /mcp/* /.well-known/* /healthz
+    handle @allowed {
+        reverse_proxy 127.0.0.1:8770 {
+            flush_interval -1
+        }
+    }
+    handle {
+        respond "MannyFi MCP endpoint. Add https://mcp.mannyfi.xyz/mcp as a connector in Claude or ChatGPT. Guide: https://mannyfi.xyz/guide/" 200
+    }
+
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        -Server
+    }
+}
+
+# The previous address keeps working for links people already have.
+pitchook.xyz, www.pitchook.xyz {
+    redir https://mannyfi.xyz{uri} permanent
+}
